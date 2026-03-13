@@ -61,5 +61,4 @@ Used **AWS CodeCommit** for Git-based source control, **AWS CodeDeploy** for aut
 ---
 
 **Program:** AWS Cloud Institute
-**Status:** Completed ✅
-**Contact:** [Your Name] | [Your GitHub Profile]
+
