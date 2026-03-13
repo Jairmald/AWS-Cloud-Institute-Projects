@@ -1,0 +1,220 @@
+# Configuring File Ownership and Permissions in Linux
+
+![Lab Report](https://img.shields.io/badge/Status-Completed-brightgreen)
+![Framework](https://img.shields.io/badge/Framework-Linux%20Administration-blue)
+![Tools](https://img.shields.io/badge/Tools-chown%2C%20chmod%2C%20ls%20-l%2C%20Bash-orange)
+![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-yellow)
+![Duration](https://img.shields.io/badge/Duration-Hands--On%20Lab-lightblue)
+
+---
+
+## **1. Lab Title**
+
+> Week 2 Lab 3: Configuring File Ownership and Permissions in Linux — chown and chmod for AnyCompany Department Directory Security
+
+---
+
+## **2. Purpose and Objectives**
+
+The objective of this lab is to develop hands-on proficiency with **Linux file ownership and permission management** using `chown` and `chmod`. Building on the AnyCompany directory structure and user accounts from previous labs, this lab assigns department-appropriate ownership and enforces access control through both symbolic and absolute permission modes.
+
+**Key Learning Outcomes:**
+- Use `sudo chown -R` to **recursively assign file and directory ownership** to specific users and groups
+- Apply **symbolic permission mode** with `chmod` (e.g., `u+w`) to add or remove specific bits
+- Apply **absolute (octal) permission mode** with `chmod` (e.g., `chmod 760`) to set all permission bits at once
+- Verify permission assignments using `ls -l` to read the permission string
+- Understand the **three permission classes** (user/owner, group, others) and **three permission types** (read, write, execute)
+- Apply real-world access control scenarios: department managers own their directories, others are restricted
+
+---
+
+## **3. Frameworks, Standards, and Methodologies**
+
+- **Linux Discretionary Access Control (DAC):** Owner-controlled permissions model using user, group, and other classes
+- **Principle of Least Privilege:** Granting only the minimum permissions required for each role
+- **Recursive Ownership Assignment:** Applying `chown -R` to propagate ownership through entire directory trees
+- **Symbolic vs. Absolute chmod Modes:** Understanding when to use additive symbolic notation vs. precise octal notation
+- **Permission Verification:** Using `ls -l` to confirm permission assignments before and after changes
+
+---
+
+## **4. Tools and Technologies**
+
+- **Cloud Provider:** Amazon Web Services (AWS)
+- **Compute:** Amazon EC2 (Linux instance via Session Manager)
+- **Shell:** Bash
+- **Core Commands Practiced:**
+  - `sudo chown -R <user>:<group> <path>` — recursively change owner and group
+  - `chmod u+w <file>` — symbolic mode: add write permission for owner
+  - `chmod 760 <file>` — absolute mode: set rwxrw---- permissions
+  - `ls -l` — list files with permission strings
+- **Users Referenced:** `mjackson`, `eowusu`, `nwolf`
+- **Groups Referenced:** `Personnel`, `Shipping`, `Sales`
+- **Working Directory:** `/home/ssm-user/AnyCompany/`
+
+---
+
+## **5. Procedures and Implementation**
+
+<details>
+<summary>Click to expand detailed steps</summary>
+
+1. **Task 2: Assign Department Ownership with chown**
+   - Assigned recursive ownership of the entire AnyCompany directory to `mjackson` and the `Personnel` group:
+     ```bash
+     sudo chown -R mjackson:Personnel /home/ssm-user/AnyCompany
+     ```
+   - Assigned ownership of the Shipping subdirectory to `eowusu` and the `Shipping` group:
+     ```bash
+     sudo chown -R eowusu:Shipping /home/ssm-user/AnyCompany/HR/Shipping
+     ```
+   - Verified ownership assignments using `ls -l` on each directory
+   - Confirmed the user:group ownership string changed from `ssm-user:ssm-user` to the assigned values
+
+2. **Task 3: Set Permissions Using Symbolic Mode**
+   - Created a test file `symbolic_mode_file` for permission practice
+   - Viewed initial permissions with `ls -l symbolic_mode_file`
+   - Added write permission for the owner using symbolic mode:
+     ```bash
+     chmod u+w symbolic_mode_file
+     ```
+   - Verified the permission string updated (e.g., `-rw-r--r--` → `-rw-r--r--` with write confirmed)
+   - Practiced removing permissions with `-` notation (e.g., `chmod o-r` to remove read for others)
+
+3. **Task 3: Set Permissions Using Absolute (Octal) Mode**
+   - Created a test file `absolute_mode_file` for absolute permission practice
+   - Applied absolute permission `760` using octal notation:
+     ```bash
+     chmod 760 absolute_mode_file
+     ```
+   - Verified the resulting permission string: `-rwxrw----`
+     - Owner (`mjackson`): `rwx` (7 = read + write + execute)
+     - Group (`Personnel`): `rw-` (6 = read + write)
+     - Others: `---` (0 = no permissions)
+   - Confirmed the correct bit pattern using `ls -l absolute_mode_file`
+
+4. **Task 4: Assign Sales Directory Ownership**
+   - Assigned recursive ownership of the Sales directory to `nwolf` and the `Sales` group:
+     ```bash
+     sudo chown -R nwolf:Sales /home/ssm-user/AnyCompany/HR/Sales
+     ```
+   - Verified ownership with `ls -l` confirming `nwolf:Sales` as the owner
+
+</details>
+
+---
+
+## **6. Findings and Results**
+
+- **Finding 1:** `chown -R mjackson:Personnel` recursively updated ownership of all files and subdirectories under AnyCompany to `mjackson:Personnel` in a single command, confirming the efficiency of recursive ownership assignment
+- **Finding 2:** `ls -l` permission strings follow the format `-rwxrwxrwx` with positions 1–3 representing owner permissions, 4–6 representing group permissions, and 7–9 representing others — reading these strings correctly is essential for permission auditing
+- **Finding 3:** Symbolic mode `chmod u+w` added write permission for the owner without affecting group or other permissions — useful when selectively modifying a single bit without resetting the entire permission set
+- **Finding 4:** Absolute mode `chmod 760` set all nine permission bits simultaneously in one command — more precise and less error-prone than multiple symbolic operations when the full permission set is known
+- **Finding 5:** The octal permission `760` produced `-rwxrw----`: owner gets full access (7=rwx), group gets read/write (6=rw-), and others get no access (0=---) — directly enforcing the least-privilege principle for department file access
+- **Finding 6:** `chown -R eowusu:Shipping` correctly assigned the Shipping subdirectory to the appropriate team owner and group, enabling group-based access control for that department's files
+- **Finding 7:** All ownership and permission changes were immediately verifiable through `ls -l` without requiring any restart or refresh, confirming real-time application of access control changes
+
+---
+
+## **7. Screenshots and Evidence**
+
+<details>
+<summary>Click to expand permission reference and examples</summary>
+
+### Linux Permission String Structure
+
+```
+-rwxrw----
+│├┤├┤├──┤
+││ │ │  └─ Others: --- (no permissions)
+││ │ └──── Group:  rw- (read + write)
+││ └─────── Owner: rwx (read + write + execute)
+│└───────── File type: - (regular file), d (directory)
+```
+
+### Octal Permission Reference
+
+| Octal | Binary | Permissions | Meaning |
+|-------|--------|-------------|---------|
+| `7` | `111` | `rwx` | Read + Write + Execute |
+| `6` | `110` | `rw-` | Read + Write |
+| `5` | `101` | `r-x` | Read + Execute |
+| `4` | `100` | `r--` | Read only |
+| `0` | `000` | `---` | No permissions |
+
+### Symbolic Mode Reference
+
+| Syntax | Meaning |
+|--------|---------|
+| `u+w` | Add write permission for owner (user) |
+| `g-x` | Remove execute for group |
+| `o-r` | Remove read for others |
+| `a+r` | Add read for all (user, group, others) |
+
+### Ownership and Permission Summary
+
+| Path | Owner | Group | Permissions |
+|------|-------|-------|-------------|
+| `/AnyCompany/` | `mjackson` | `Personnel` | Recursive |
+| `/AnyCompany/HR/Shipping/` | `eowusu` | `Shipping` | Recursive |
+| `/AnyCompany/HR/Sales/` | `nwolf` | `Sales` | Recursive |
+| `absolute_mode_file` | `mjackson` | `Personnel` | `760` (`rwxrw----`) |
+
+</details>
+
+---
+
+## **8. Challenges and Solutions**
+
+| Challenge | Solution | Outcome |
+|-----------|----------|---------|
+| Calculating correct octal value for target permissions | Used the binary-to-octal table: each permission group is a 3-bit binary number — 7=111=rwx, 6=110=rw-, 0=000=--- | Correctly computed `760` for the target permission set |
+| Understanding why `chown` requires `sudo` | Regular users can only change ownership of files they own; `sudo` is required to change ownership of files owned by other users or system processes | Used `sudo chown -R` for all ownership changes |
+| Distinguishing symbolic `u` from absolute octal | Symbolic mode uses letter references (`u`=user, `g`=group, `o`=others) with `+/-/=` operators; absolute mode uses a three-digit octal number | Applied correct syntax for each mode in the respective tasks |
+| Verifying recursive ownership change applied to all files | Used `ls -lR` on the target directory to check ownership strings on subdirectories and files | Confirmed all entries showed the new owner:group values |
+
+---
+
+## **9. Key Takeaways and Lessons Learned**
+
+- **Octal Permissions as Binary Logic:** Understanding that each octal digit maps to a three-bit binary number (`rwx`) makes permission calculation intuitive. Every system administrator should be fluent in reading and writing octal permission values.
+
+- **Symbolic Mode for Surgical Changes:** Symbolic `chmod` is ideal when only one bit needs to change without disturbing the rest of the permission set — it is self-documenting and reduces the risk of accidentally removing unintended permissions.
+
+- **Absolute Mode for Precision:** Absolute octal `chmod` is preferred when the full permission set is known and needs to be enforced exactly — it eliminates ambiguity about existing permissions and ensures a deterministic state.
+
+- **`-R` Flag Enables Scalable Ownership Management:** Managing ownership one file at a time is impractical at scale. `chown -R` propagates ownership changes through entire directory trees, which is the correct approach for department-level access control.
+
+- **`ls -l` is the Audit Tool:** Every permission and ownership change should be verified with `ls -l`. Developing the habit of checking permission strings after changes prevents misconfiguration from going undetected.
+
+---
+
+## **10. Artifacts and Deliverables**
+
+- **Octal Permission Reference Table:** Complete mapping of octal values to binary and symbolic representations
+- **Symbolic Mode Reference:** Common symbolic chmod operations with syntax examples
+- **Ownership and Permission Summary:** Table of all assigned owners, groups, and permissions by path
+- **Permission String Structure Diagram:** Visual breakdown of the `ls -l` permission string format
+
+---
+
+## **11. Conclusion**
+
+This lab successfully demonstrated Linux file ownership and permission management using both `chown` and `chmod` in a realistic department-based access control scenario. Recursive ownership assignment with `chown -R` efficiently applied correct user:group ownership across the AnyCompany directory tree. Both symbolic mode (`u+w`) and absolute octal mode (`chmod 760`) were practiced, with their respective strengths validated — symbolic for surgical single-bit changes, absolute for precise full-permission enforcement. The resulting permission configurations enforced least-privilege access: department owners had full access, group members had read/write, and others had no access. These skills are directly applicable to any Linux system where multiple users and teams require differentiated access to shared resources.
+
+---
+
+## **12. References**
+
+- [Linux `chmod` Man Page](https://man7.org/linux/man-pages/man1/chmod.1.html)
+- [Linux `chown` Man Page](https://man7.org/linux/man-pages/man1/chown.1.html)
+- [Linux File Permissions Explained](https://www.linux.com/training-tutorials/understanding-linux-file-permissions/)
+- [Octal Notation Reference](https://chmod-calculator.com/)
+- [Linux DAC – Discretionary Access Control](https://www.kernel.org/doc/html/latest/admin-guide/security-bugs.html)
+- [AWS Systems Manager Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
+
+---
+
+**Lab Completed:** 2026
+**Course:** AWS Cloud Operations
+**Status:** Completed ✅
