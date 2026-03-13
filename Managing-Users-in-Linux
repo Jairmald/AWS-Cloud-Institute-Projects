@@ -1,0 +1,245 @@
+# Managing Users in Linux
+
+![Lab Report](https://img.shields.io/badge/Status-Completed-brightgreen)
+![Framework](https://img.shields.io/badge/Framework-Linux%20Administration-blue)
+![Tools](https://img.shields.io/badge/Tools-useradd%2C%20groupadd%2C%20usermod%2C%20journalctl%2C%20Bash-orange)
+![Difficulty](https://img.shields.io/badge/Difficulty-Beginner-yellow)
+![Duration](https://img.shields.io/badge/Duration-Hands--On%20Lab-lightblue)
+
+---
+
+## **1. Lab Title**
+
+> Week 2 Lab Part 2: Managing Users in Linux — User Creation, Group Assignment, Sudo Restriction, and Audit Log Analysis
+
+---
+
+## **2. Purpose and Objectives**
+
+The objective of this lab is to develop hands-on proficiency with **Linux user and group management** by creating user accounts, assigning group memberships, testing sudo restrictions, and reviewing system audit logs. Using a realistic AnyCompany staffing scenario, this lab covers the complete user lifecycle from account creation through privilege validation.
+
+**Key Learning Outcomes:**
+- Create new **Linux user accounts** using `useradd` and set passwords with `passwd`
+- Verify user creation by inspecting `/etc/passwd` with `cut`
+- Create **user groups** with `groupadd` and assign users to multiple groups using `usermod -a -G`
+- Switch user identities with `su` to test permissions in context
+- Understand and verify **sudo restrictions** for non-sudoers users
+- Use `journalctl` to search system audit logs for sudo denial events
+
+---
+
+## **3. Frameworks, Standards, and Methodologies**
+
+- **Linux Identity and Access Management:** User account lifecycle management following least-privilege principles
+- **Group-Based Access Control:** Organizing users into groups to manage shared resource permissions efficiently
+- **Sudo Security Model:** Understanding how sudo grants administrative privileges and how restrictions are enforced
+- **System Audit Logging:** Using `journalctl` to investigate security events and access denials
+- **Password Policy Enforcement:** Setting initial passwords and understanding Linux password storage in `/etc/shadow`
+
+---
+
+## **4. Tools and Technologies**
+
+- **Cloud Provider:** Amazon Web Services (AWS)
+- **Compute:** Amazon EC2 (Linux instance via Session Manager)
+- **Shell:** Bash
+- **Core Commands Practiced:**
+  - `sudo useradd` — create a new user account
+  - `sudo passwd` — set a user's password
+  - `cat /etc/passwd | cut -d: -f1` — list all usernames
+  - `sudo groupadd` — create a new group
+  - `sudo usermod -a -G` — add a user to supplementary groups
+  - `groups` — display group memberships
+  - `su <username>` — switch to another user identity
+  - `sudo touch` — test sudo access for a user
+  - `sudo journalctl | grep` — search system audit logs
+- **Users Created:** `arosalez`, `eowusu`, `jdoe`, `mjackson`, `nwolf`, `mmajor`
+- **Groups Created/Used:** `Sales`, `CEO`, `Shipping`, `Managers`, `Personnel`
+
+---
+
+## **5. Procedures and Implementation**
+
+<details>
+<summary>Click to expand detailed steps</summary>
+
+1. **Task 2: Create User Accounts**
+   - Created six new user accounts using `sudo useradd`:
+     ```bash
+     sudo useradd arosalez
+     sudo useradd eowusu
+     sudo useradd jdoe
+     sudo useradd mjackson
+     sudo useradd nwolf
+     sudo useradd mmajor
+     ```
+   - Set a password for each user using `sudo passwd <username>` with password `P@ssword1234!`
+   - Verified all users were created by listing usernames from `/etc/passwd`:
+     ```bash
+     cat /etc/passwd | cut -d: -f1
+     ```
+   - Confirmed all six new usernames appeared in the output
+
+2. **Task 3: Create Groups and Assign Memberships**
+   - Created the `Sales` group:
+     ```bash
+     sudo groupadd Sales
+     ```
+   - Assigned `arosalez` to multiple groups using `usermod -a -G`:
+     ```bash
+     sudo usermod -a -G Sales,Managers,Personnel arosalez
+     ```
+   - Assigned other users to their respective groups per the AnyCompany org chart:
+     - `jdoe` → `CEO`
+     - `eowusu` → `Shipping`
+     - `nwolf` → `Sales`
+     - `mmajor` → `Managers`
+     - `mjackson` → `Personnel`
+   - Verified group memberships using the `groups <username>` command
+
+3. **Task 4: Test Sudo Restrictions and Audit Logs**
+   - Switched to the `arosalez` user identity using `su arosalez`
+   - Attempted to create a file directly: `touch myFile.txt`
+     - Received **Permission denied** (not in a directory owned by arosalez)
+   - Attempted to use sudo: `sudo touch myFile.txt`
+     - Received **"arosalez is not in the sudoers file"** error message
+   - Switched back to `ssm-user` using `exit`
+   - Queried system audit logs with `journalctl` to find the denial event:
+     ```bash
+     sudo journalctl | grep "user NOT in sudoers"
+     ```
+   - Verified the log entry recorded `arosalez`'s failed sudo attempt with timestamp
+
+</details>
+
+---
+
+## **6. Findings and Results**
+
+- **Finding 1:** `useradd` successfully created all six user accounts; each new user appeared in `/etc/passwd` confirming the accounts were added to the system identity database
+- **Finding 2:** `cat /etc/passwd | cut -d: -f1` efficiently extracted only the username field (field 1, colon-delimited) from the full `/etc/passwd` records, demonstrating the power of piping and `cut` for structured text processing
+- **Finding 3:** `usermod -a -G` with comma-separated group names added `arosalez` to `Sales`, `Managers`, and `Personnel` in a single command; the `-a` flag (append) prevented existing group memberships from being overwritten
+- **Finding 4:** `groups arosalez` confirmed membership in all three assigned groups plus the default primary group, validating correct multi-group assignment
+- **Finding 5:** When operating as `arosalez` (via `su`), `sudo touch myFile.txt` produced the expected "not in the sudoers file" message, confirming that sudo access is explicitly granted and not inherited from general user creation
+- **Finding 6:** `sudo journalctl | grep "user NOT in sudoers"` successfully located the audit log entry recording `arosalez`'s denied sudo attempt, including the exact timestamp and attempted command
+- **Finding 7:** The `su` command allowed identity switching without logging out of the `ssm-user` session, enabling testing of user-specific permissions within a single terminal session
+
+---
+
+## **7. Screenshots and Evidence**
+
+<details>
+<summary>Click to expand user management reference</summary>
+
+### Users and Group Assignments
+
+| Username | Primary Group | Supplementary Groups |
+|----------|--------------|---------------------|
+| `arosalez` | `arosalez` | `Sales`, `Managers`, `Personnel` |
+| `eowusu` | `eowusu` | `Shipping` |
+| `jdoe` | `jdoe` | `CEO` |
+| `mjackson` | `mjackson` | `Personnel` |
+| `nwolf` | `nwolf` | `Sales` |
+| `mmajor` | `mmajor` | `Managers` |
+
+### Key Commands Reference
+
+```bash
+# Create user
+sudo useradd arosalez
+
+# Set password
+sudo passwd arosalez
+
+# Verify users
+cat /etc/passwd | cut -d: -f1
+
+# Create group
+sudo groupadd Sales
+
+# Assign user to multiple groups (append, don't replace)
+sudo usermod -a -G Sales,Managers,Personnel arosalez
+
+# Verify group membership
+groups arosalez
+
+# Switch user
+su arosalez
+
+# Return to previous user
+exit
+
+# Search audit logs
+sudo journalctl | grep "user NOT in sudoers"
+```
+
+### /etc/passwd Field Structure
+
+| Field # | Content | Example |
+|---------|---------|---------|
+| 1 | Username | `arosalez` |
+| 2 | Password placeholder | `x` |
+| 3 | UID | `1002` |
+| 4 | GID | `1002` |
+| 5 | GECOS (full name) | `` |
+| 6 | Home directory | `/home/arosalez` |
+| 7 | Login shell | `/bin/bash` |
+
+</details>
+
+---
+
+## **8. Challenges and Solutions**
+
+| Challenge | Solution | Outcome |
+|-----------|----------|---------|
+| Understanding `-a` flag importance in `usermod -a -G` | Without `-a`, `usermod -G` replaces all existing supplementary groups; `-a` appends — confirmed by reading the `usermod` man page | Used `-a -G` consistently to preserve existing memberships |
+| `su arosalez` prompting for password | Entered the password set during `passwd arosalez` (`P@ssword1234!`) | Successfully switched to arosalez identity |
+| Finding specific event in journalctl output | Used `grep "user NOT in sudoers"` to filter the log stream | Located the denial event immediately without scrolling |
+| Distinguishing `/etc/passwd` from `/etc/shadow` | `/etc/passwd` is world-readable and stores account metadata; `/etc/shadow` stores hashed passwords and is restricted to root | Correctly used `/etc/passwd` for username verification |
+
+---
+
+## **9. Key Takeaways and Lessons Learned**
+
+- **`-a` in `usermod -a -G` is Non-Negotiable:** Omitting the `-a` flag when adding a user to groups replaces all supplementary group memberships with only the specified group. This is a common and potentially serious mistake in production user management.
+
+- **Sudo is Explicitly Granted:** Sudo access is not a default privilege — it must be explicitly added to `/etc/sudoers` or a sudoers drop-in file. This is an important security boundary that prevents ordinary users from escalating privileges.
+
+- **`journalctl` for Security Auditing:** System logs capture sudo denials, authentication failures, and other security events. The ability to query these logs with `journalctl | grep` is a foundational security investigation skill.
+
+- **`/etc/passwd` is the Identity Database:** Every user account on the system has an entry in `/etc/passwd`. Using `cut` to extract specific fields from this structured file demonstrates Linux's philosophy of text-based configuration that can be processed with standard tools.
+
+- **Group-Based Access = Scalable Permissions:** Assigning users to groups and then granting permissions to groups (rather than individual users) is the scalable approach to Linux access management — one permission change affects all group members simultaneously.
+
+---
+
+## **10. Artifacts and Deliverables**
+
+- **User Account List:** Six AnyCompany user accounts created with verified `/etc/passwd` entries
+- **Group Assignment Table:** Complete mapping of users to their supplementary groups
+- **Sudo Restriction Test Results:** Verified denial of `arosalez`'s sudo attempt with corresponding journalctl log entry
+- **Key Commands Reference:** Complete user management command reference with flags explained
+
+---
+
+## **11. Conclusion**
+
+This lab successfully demonstrated the complete Linux user management workflow: creating user accounts, setting passwords, creating groups, assigning multi-group memberships, and validating sudo restrictions through practical testing. The `/etc/passwd` verification pattern, `usermod -a -G` for non-destructive group assignment, and `journalctl` audit log querying established a repeatable process for managing user identities in a Linux environment. The critical importance of the `-a` flag in `usermod` and the explicit-grant nature of sudo access were reinforced through direct observation. These skills are foundational for any cloud administrator responsible for managing access to Linux-based servers and services.
+
+---
+
+## **12. References**
+
+- [Linux `useradd` Man Page](https://man7.org/linux/man-pages/man8/useradd.8.html)
+- [Linux `usermod` Man Page](https://man7.org/linux/man-pages/man8/usermod.8.html)
+- [Linux `groupadd` Man Page](https://man7.org/linux/man-pages/man8/groupadd.8.html)
+- [Understanding /etc/passwd](https://www.cyberciti.biz/faq/understanding-etcpasswd-file-format/)
+- [Linux sudo Documentation](https://www.sudo.ws/docs/man/sudo.man/)
+- [journalctl Man Page](https://man7.org/linux/man-pages/man1/journalctl.1.html)
+
+---
+
+**Lab Completed:** 2026
+**Course:** AWS Cloud Operations
+**Status:** Completed ✅
